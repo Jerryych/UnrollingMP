@@ -6,16 +6,20 @@ class MP:
     def __init__(self):
 
     def _init(self, N, n, p):
-        # N: number of data instance
-        # n: dimension of signal
-        # p: number of atom
+        '''
+        N: number of data instance
+        n: dimension of signal
+        p: number of atom
+        '''
         self.phi = np.random.randn(n, p)
         self.x_p = np.random.randn(p, N)
 
     def fit(self, X, Y, m):
-        # X: sparse representation
-        # Y: signal
-        # m: number of atom in sparse representation
+        '''
+        X: sparse representation
+        Y: signal
+        m: number of atom in sparse representation
+        '''
         n, N = Y.shape
         p, _ = X.shape
         self._init(N, n, p)
@@ -32,3 +36,20 @@ class MP:
     def update_past_x(self, m, j):
 
     def udpate_phi(self, m, j):
+
+
+class UMP:
+
+    def __init__(self, N, n, p, m):
+        '''
+        N: number of data instance
+        n: dimension of signal
+        p: number of atom
+        m: number of atom in sparse representation
+        '''
+
+    def _instance_block(self, m, j):
+
+    def _constraint_block(self, m):
+
+    def forward(self, N, n, p, m):
