@@ -9,8 +9,15 @@ def gen_basis(n, p):
     n: length of a basis
     p: number of basis
     '''
-    basis = np.zeros((n, p))
-
+    C = np.zeros((n, n))
+    S = np.zeros((n, n))
+    ns = np.arange(n)
+    one_cycle = 2 * np.pi * ns / n
+    for k in range(n):
+        t_k = k * one_cycle
+        C[:, k] = np.cos(t_k)
+        S[:, k] = np.sin(t_k)
+    basis = np.concatenate((C, S), axis=1)
     return basis
 
 def gen_coeff(N, p, m):
@@ -20,9 +27,13 @@ def gen_coeff(N, p, m):
     m: sparsity (non zeros)
     '''
     coeff = np.zeros((p, N))
-
+    for i in range(N):
+        pos_w = list(zip(np.random.choice(p, m), np.random.rand(m)))
+        column = np.zeros(p)
+        for pos, w in pos_w:
+            column[pos] = w
+        coeff[:, i] = column
     return coeff
-
 
 def main(dir, N, n, p, m):
     '''
