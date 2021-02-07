@@ -46,7 +46,7 @@ def main(dir, N, n, p, m):
 
     phi = gen_basis(n, p)
     X = gen_coeff(N, p, m)
-    Y = np.dot(phi, X)
+    Y = np.matmul(phi, X)
 
     if not os.path.exists(dir):
         os.mkdir(dir)
