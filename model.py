@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import linalg as LA
 
 
 class MP:
@@ -11,20 +12,22 @@ class MP:
         '''
         self.phi = np.random.randn(n, p)
         self.x_p = np.random.randn(p, N)
+        self.N = N
+        self.n = n
+        self.p = p
 
-    def fit(self, X, Y, m):
+    def fit(self, Y, m):
         '''
+        fit (phi, X)
+
         X: sparse representation
         Y: signal
         m: number of atom in sparse representation
         '''
-        n, N = Y.shape
-        p, _ = X.shape
-        self._init(N, n, p)
         self.y = Y
 
         for i in range(m):
-            for j in range(N):
+            for j in range(self.N):
                 self.update_curr_x(i, j)
                 self.update_past_x(i, j - 1)
                 self.update_phi(i, j)
@@ -34,6 +37,14 @@ class MP:
     def update_past_x(self, m, j):
 
     def udpate_phi(self, m, j):
+
+    def eval(self, phi_real, X):
+        '''
+        measure difference between estimated (phi, X) and real (phi, X) with 2-norm
+        '''
+        phi_diff = LA.norm(phi_real - self.phi)
+        X_diff = LA.norm(X - self.x_p)
+        return phi_diff, X_diff
 
 
 class UMP:
