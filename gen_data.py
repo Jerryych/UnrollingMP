@@ -55,6 +55,7 @@ def main(dir, N, n, p, m):
         f['phi'] = phi
         f['X'] = X
         f['Y'] = Y
+        f['m'] = m
         print('Write file: ' + f.name)
 
 

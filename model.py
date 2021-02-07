@@ -3,9 +3,7 @@ import numpy as np
 
 class MP:
 
-    def __init__(self):
-
-    def _init(self, N, n, p):
+    def __init__(self, N, n, p):
         '''
         N: number of data instance
         n: dimension of signal
