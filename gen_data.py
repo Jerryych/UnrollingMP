@@ -67,7 +67,7 @@ def main(dir, fname, N, n, p, m):
         f['X'] = X
         f['Y'] = Y
         f['m'] = m
-        print('Write file: ' + f.name)
+        print('Write file: ' + f.filename)
 
 
 if __name__ == '__main__':
