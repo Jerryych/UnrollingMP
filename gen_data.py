@@ -46,7 +46,7 @@ def gen_coeff(N, p, m):
         coeff[:, i] = column
     return coeff
 
-def main(dir, fn, N, n, p, m):
+def main(dir, fname, N, n, p, m):
     '''
     N: number of instance
     n: length of a basis
@@ -62,7 +62,7 @@ def main(dir, fn, N, n, p, m):
     if not os.path.exists(dir):
         os.mkdir(dir)
 
-    with h5py.File(dir + fn, 'w') as f:
+    with h5py.File(dir + fname, 'w') as f:
         f['phi'] = phi
         f['X'] = X
         f['Y'] = Y
