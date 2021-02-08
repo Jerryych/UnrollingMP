@@ -1,5 +1,6 @@
 # Generate orthogonal basis, coefficient (X), and signal (Y)
 import numpy as np
+from numpy import linalg as LA
 import h5py
 import os
 
@@ -15,8 +16,18 @@ def gen_basis(n, p):
     one_cycle = 2 * np.pi * ns / n
     for k in range(n):
         t_k = k * one_cycle
-        C[:, k] = np.cos(t_k)
-        S[:, k] = np.sin(t_k)
+        # normalized cosine basis
+        vec = np.cos(t_k)
+        norm = LA.norm(vec)
+        if norm != 0:
+            vec = vec / norm
+        C[:, k] = vec
+        # normalized sine basis
+        vec = np.sin(t_k)
+        norm = LA.norm(vec)
+        if norm != 0:
+            vec = vec / norm
+        S[:, k] = vec
     basis = np.concatenate((C, S), axis=1)
     return basis
 
@@ -35,7 +46,7 @@ def gen_coeff(N, p, m):
         coeff[:, i] = column
     return coeff
 
-def main(dir, N, n, p, m):
+def main(dir, fn, N, n, p, m):
     '''
     N: number of instance
     n: length of a basis
@@ -51,7 +62,7 @@ def main(dir, N, n, p, m):
     if not os.path.exists(dir):
         os.mkdir(dir)
 
-    with h5py.File(dir + 'arti_dataset.hdf5', 'w') as f:
+    with h5py.File(dir + fn, 'w') as f:
         f['phi'] = phi
         f['X'] = X
         f['Y'] = Y
@@ -60,4 +71,4 @@ def main(dir, N, n, p, m):
 
 
 if __name__ == '__main__':
-    main('dataset', 50, 16, 32, 4)
+    main('dataset', 'arti_dataset.hdf5', 50, 16, 32, 4)
