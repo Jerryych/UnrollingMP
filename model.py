@@ -16,7 +16,7 @@ class MP:
         self.n = n
         self.p = p
 
-    def fit(self, Y, m):
+    def fit(self, Y, m, phi_real, X):
         '''
         fit (phi, X)
 
@@ -28,15 +28,17 @@ class MP:
 
         for i in range(m):
             for j in range(self.N):
-                self.update_curr_x(i, j)
-                self.update_past_x(i, j - 1)
-                self.update_phi(i, j)
+                self.__update_curr_x(i, j)
+                self.__update_past_x(i, j - 1)
+                self.__update_phi(i, j)
+            p_d, x_d = self.eval(phi_real, X)
+            print(f'Phi diff: {p_d}, X diff: {x_d}')
 
-    def update_curr_x(self, m, j):
+    def __update_curr_x(self, m, j):
 
-    def update_past_x(self, m, j):
+    def __update_past_x(self, m, j):
 
-    def udpate_phi(self, m, j):
+    def __udpate_phi(self, m, j):
 
     def eval(self, phi_real, X):
         '''
