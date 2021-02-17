@@ -26,7 +26,7 @@ def main(dir, fname, model, mode):
         print(f'No model named {model}')
 
 
-if __name__ = '__main__':
+if __name__ == '__main__':
     if len(sys.argv) == 5:
         dir = sys.argv[1]
         fname = sys.argv[2]

@@ -15,14 +15,14 @@ class MP:
         lam: hyper-param for proximal gradient
         threshold: shrinkage operator
         '''
-        self.phi = np.random.randn(n, p)
-        self.x_p = np.random.randn(p, N)
+        self.phi = np.random.uniform(-1.0, 1.0, size=(n, p))
+        self.x_p = np.random.uniform(-1.0, 1.0, size=(p, N))
         self.N = N
         self.n = n
         self.p = p
         self.step = 0.1
-        self.rho = -1.0
-        self.lam = 1.0
+        self.rho = -0.0001
+        self.lam = 0.01
         self.threshold = math.sqrt(2 * (-1 * self.rho) / self.lam)
 
     def fit(self, Y, m, phi_real, X, mode='m'):
@@ -41,7 +41,7 @@ class MP:
             p_d, x_d = self.eval(phi_real, X)
             print(f'Phi diff: {p_d}, X diff: {x_d}')
         elif mode == '1':
-            for i in range(m):
+            for i in range(50):
                 self.fit_all_instances(i)
                 p_d, x_d = self.eval(phi_real, X)
                 print(f'Phi diff: {p_d}, X diff: {x_d}')
@@ -71,14 +71,14 @@ class MP:
         j = j + 1
         for idx in range(j):
             self.x_p[:, idx] = self.x_p[:, idx] - self.__grad_x(idx)
-            self.x_p[:, idx] = self.__prox_grad_x(m, j)
+            self.x_p[:, idx] = self.__prox_grad_x(m, idx)
 
-    def __udpate_phi(self, j):
+    def __update_phi(self, j):
         '''
         Update phi with {x[0] ~ x[j]}
         Matrix update
         '''
-        self.phi = self.phi - self.__grad_phi(j)
+        self.phi = self.phi - 0.0001 * self.__grad_phi(j)
 
     def __grad_x(self, j):
         '''
@@ -92,6 +92,7 @@ class MP:
         In vector form
         Hard thresholding
         '''
+        x = self.x_p[:, j]
         return np.where(np.absolute(x) > self.threshold, x, 0)
 
     def __grad_phi(self, j):
@@ -132,7 +133,10 @@ class UMP:
         '''
 
     def _instance_block(self, m, j):
+        pass
 
     def _constraint_block(self, m):
+        pass
 
     def forward(self, N, n, p, m):
+        pass
