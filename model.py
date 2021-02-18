@@ -38,14 +38,16 @@ class MP:
 
         if mode == 'm':
             self.fit_all_instances(m)
-            p_d, x_d = self.eval(phi_real, X)
-            print(f'Phi diff: {p_d}, X diff: {x_d}')
+            p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
+            print(f'Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
         elif mode == '1':
+            p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
+            print(f'Init    Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
             for i in range(50):
                 self.fit_all_instances(i)
-                p_d, x_d = self.eval(phi_real, X)
-                print(f'Phi diff: {p_d}, X diff: {x_d}')
-                self.y = self.y - self.phi @ self.x_p
+                p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
+                print(f'{i} Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
+                #self.y = self.y - self.phi @ self.x_p
 
     def fit_all_instances(self, m):
         '''
@@ -111,11 +113,12 @@ class MP:
 
     def eval(self, phi_real, X, Y=None):
         '''
-        measure difference between estimated (phi, X) and real (phi, X) with 2-norm
+        Measure difference between estimated (phi, X) and real (phi, X) with 2-norm
+        If Y is an object, return difference of estimated Y and real Y
         '''
         phi_diff = LA.norm(phi_real - self.phi)
         X_diff = LA.norm(X - self.x_p)
-        if Y:
+        if Y is not None:
             Y_diff = LA.norm(Y - self.phi @ self.x_p)
             return phi_diff, X_diff, Y_diff
         else:

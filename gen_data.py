@@ -39,7 +39,7 @@ def gen_coeff(N, p, m):
     '''
     coeff = np.zeros((p, N))
     for i in range(N):
-        pos_w = list(zip(np.random.choice(p, m), np.random.rand(m)))
+        pos_w = list(zip(np.random.choice(p, m), np.random.uniform(1, 2, m)))
         column = np.zeros(p)
         for pos, w in pos_w:
             column[pos] = w
