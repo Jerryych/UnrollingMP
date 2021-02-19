@@ -1,6 +1,8 @@
 import numpy as np
 from numpy import linalg as LA
 import math
+import torch
+from torch import nn
 
 
 class MP:
@@ -144,7 +146,7 @@ class MP:
         mu = LA.norm(self.phi.T @ self.phi - np.eye(self.p), ord='fro')
         return Y_diff, x_sparse, mu
 
-class UMP:
+class UMP(nn.Module):
 
     def __init__(self, N, n, p, m):
         '''
