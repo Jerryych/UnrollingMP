@@ -16,6 +16,8 @@ class MP:
         threshold: shrinkage operator
         '''
         self.phi = np.random.uniform(-1.0, 1.0, size=(n, p))
+        # To unit column vector
+        self.phi = self.phi / LA.norm(self.phi, axis=0)
         self.x_p = np.random.uniform(-1.0, 1.0, size=(p, N))
         self.N = N
         self.n = n
@@ -41,12 +43,16 @@ class MP:
             p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
             print(f'Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
         elif mode == '1':
-            p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
-            print(f'Init    Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
+            #p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
+            #print(f'Init    Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
+            y_d, x_s, mu = self.objective_func(phi_real, X, Y, m)
+            print(f'Init    Y diff: {y_d}, X s: {x_s}, mu: {mu}')
             for i in range(50):
                 self.fit_all_instances(i)
-                p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
-                print(f'{i} Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
+                #p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
+                #print(f'{i} Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
+                y_d, x_s, mu = self.objective_func(phi_real, X, Y, m)
+                print(f'{i} Y diff: {y_d}, X s: {x_s}, mu: {mu}')
                 #self.y = self.y - self.phi @ self.x_p
 
     def fit_all_instances(self, m):
@@ -80,7 +86,9 @@ class MP:
         Update phi with {x[0] ~ x[j]}
         Matrix update
         '''
-        self.phi = self.phi - 0.0001 * self.__grad_phi(j)
+        self.phi = self.phi - 0.001 * self.__grad_phi(j)
+        # To unit column vector
+        self.phi = self.phi / LA.norm(self.phi, axis=0)
 
     def __grad_x(self, j):
         '''
@@ -124,6 +132,17 @@ class MP:
         else:
             return phi_diff, X_diff
 
+    def objective_func(self, phi_real, X, Y, m):
+        '''
+        Measure objective function
+        |y - PHI * x|_2 ^ 2 + rho * (m - |x|_0) + |PHI' * PHI - I|_2 ^ 2
+        '''
+        Y_diff = LA.norm(Y - self.phi @ self.x_p, ord='fro')
+        # To 0/1 matrix
+        match = np.where(X != 0, 1, 0) - np.where(self.x_p != 0, 1, 0)
+        x_sparse = sum(LA.norm(match, axis=0, ord=0))
+        mu = LA.norm(self.phi.T @ self.phi - np.eye(self.p), ord='fro')
+        return Y_diff, x_sparse, mu
 
 class UMP:
 
