@@ -17,9 +17,9 @@ class MP:
         lam: hyper-param for proximal gradient
         threshold: shrinkage operator
         '''
-        self.phi = np.random.uniform(-1.0, 1.0, size=(n, p))
+        #self.phi = np.random.uniform(-1.0, 1.0, size=(n, p))
         # To unit column vector
-        self.phi = self.phi / LA.norm(self.phi, axis=0)
+        #self.phi = self.phi / LA.norm(self.phi, axis=0)
         self.x_p = np.random.uniform(-1.0, 1.0, size=(p, N))
         self.N = N
         self.n = n
@@ -39,6 +39,7 @@ class MP:
         mode: 'm' for 1 fit_all_instances() with constraint m, '1' for m fit_all_instances() with increasing constraint
         '''
         self.y = Y
+        self.phi = phi_real
 
         if mode == 'm':
             self.fit_all_instances(m)
@@ -64,7 +65,7 @@ class MP:
         for j in range(self.N):
             self.__update_curr_x(m, j)
             self.__update_past_x(m, j - 1)
-            self.__update_phi(j)
+            #self.__update_phi(j)
 
     def __update_curr_x(self, m, j):
         '''
