@@ -3,6 +3,7 @@ from numpy import linalg as LA
 import math
 import torch
 from torch import nn
+from building_blocks import Instance_block, Constraint_block
 
 
 class MP:
@@ -149,19 +150,37 @@ class MP:
 
 class UMP(nn.Module):
 
-    def __init__(self, N, n, p, m):
+    def __init__(self, N, n, p, m, training=False, const=None):
         '''
         N: number of data instance
         n: dimension of signal
         p: number of atom
         m: number of atom in sparse representation
+        training: with parameter training if it's set to True
+        const: tuple of parameter init values (steps for X update, phi_steps, thresholds for prox grad)
         '''
+        super(UMP, self).__init__()
+        self.N = N
+        self.n = n
+        self.p = p
+        self.m = m
+        trs, steps, phi_steps, threshs = self.__create_var(self.N, self.m, training, const)
+        layers = [Constraint_block(trs[i], steps[i, :], phi_steps[i, :], threshs[i, :]) for i in range(self.m)]
+        self.const_blocks = nn.ModuleList(layers)
 
-    def _instance_block(self, m, j):
-        pass
+    def __create_var(self, N, m, training, const):
+        trs = np.full(m, training)
+        if const is not None:
+            steps = np.full((m, N), const[0])
+            phi_steps = np.full((m, N), const[1])
+            threshs = np.full((m, N), const[2])
+        else:
+            steps = np.random.uniform(0.0, 0.1, size=(m, N))
+            phi_steps = np.random.uniform(0.0, 0.1, size=(m, N))
+            threshs = np.random.uniform(0.0, 0.1, size=(m, N))
+        return trs, steps, phi_steps, threshs
 
-    def _constraint_block(self, m):
-        pass
-
-    def forward(self, N, n, p, m):
-        pass
+    def forward(self, phi, X, Y):
+        for idx in range(self.m):
+            phi, X = self.const_blocks[idx](phi, X, Y)
+        return phi, X
