@@ -46,6 +46,8 @@ class MP:
             self.fit_all_instances(m)
             p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
             print(f'Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
+            y_d, x_s, mu = self.objective_func(phi_real, X, Y, m)
+            print(f'OBJ Y diff: {y_d}, X s: {x_s}, mu: {mu}')
         elif mode == '1':
             #p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
             #print(f'Init    Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
@@ -165,11 +167,11 @@ class UMP(nn.Module):
         self.p = p
         self.m = m
         trs, steps, phi_steps, threshs = self.__create_var(self.N, self.m, training, const)
-        layers = [Constraint_block(trs[i], steps[i, :], phi_steps[i, :], threshs[i, :]) for i in range(self.m)]
+        layers = [Constraint_block(self.N, self.p, trs[i], steps[i, :], phi_steps[i, :], threshs[i, :]) for i in range(self.m)]
         self.const_blocks = nn.ModuleList(layers)
 
     def __create_var(self, N, m, training, const):
-        trs = np.full(m, training)
+        trs = np.full(m, training).tolist()
         if const is not None:
             steps = np.full((m, N), const[0])
             phi_steps = np.full((m, N), const[1])
@@ -178,7 +180,7 @@ class UMP(nn.Module):
             steps = np.random.uniform(0.0, 0.1, size=(m, N))
             phi_steps = np.random.uniform(0.0, 0.1, size=(m, N))
             threshs = np.random.uniform(0.0, 0.1, size=(m, N))
-        return trs, steps, phi_steps, threshs
+        return trs, torch.tensor(steps), torch.tensor(phi_steps), torch.tensor(threshs)
 
     def forward(self, phi, X, Y):
         for idx in range(self.m):

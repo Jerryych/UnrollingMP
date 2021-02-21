@@ -3,12 +3,13 @@ from torch import nn
 
 
 class Instance_block(nn.Module):
-'''
-Update specific X[i] and phi
-'''
+    '''
+    Update specific X[i] and phi
+    '''
 
-    def __init__(self, tr, step, phi_step, thresh):
+    def __init__(self, p, tr, step, phi_step, thresh):
         super(Instance_block, self).__init__()
+        self.p = p
         self.training = tr
         self.step = nn.Parameter(step, requires_grad=self.training)
         self.phi_step = nn.Parameter(phi_step, requires_grad=self.training)
@@ -22,28 +23,29 @@ Update specific X[i] and phi
         # Update X[0] ~ X[i - 1]
         for i in range(idx):
             X[:, i] = X[:, i] - (-1) * self.step * torch.transpose(phi, 0, 1) @ (Y[:, i] - phi @ X[:, i])
-            x[:, i] = self.thresh_func(X[:, i])
+            X[:, i] = self.thresh_func(X[:, i])
         # Update phi with X[0] ~ X[i]
-        idx += 1
-        phi = phi - self.phi_step * 4 * phi @ (torch.transpose(phi, 0, 1) @ phi - torch.eye(p)) - 2 * (Y[:, : idx] - phi @ X[:, : idx]) @ torch.transpose(X[:, : idx], 0, 1)
+        #idx += 1
+        #phi = phi - self.phi_step * 4 * phi @ (torch.transpose(phi, 0, 1) @ phi - torch.eye(self.p)) - 2 * (Y[:, : idx] - phi @ X[:, : idx]) @ torch.transpose(X[:, : idx], 0, 1)
         # To unit column vector
-        phi = phi / torch.norm(phi, dim=0)
+        #phi = phi / torch.norm(phi, dim=0)
 
         return phi, X
 
 
 class Constraint_block(nn.Module):
-'''
-Update X[0] ~ X[N], N: number of instance
-'''
+    '''
+    Update X[0] ~ X[N], N: number of instance
+    '''
 
-    def __init__(self, tr, steps, phi_steps, threshs):
+    def __init__(self, N, p, tr, steps, phi_steps, threshs):
         super(Constraint_block, self).__init__()
         self.N = N
-        layers = [Instance_block(tr, steps[i], phi_steps[i], threshs[i]) for i in range(self.N)]
+        self.p = p
+        layers = [Instance_block(self.p, tr, steps[i], phi_steps[i], threshs[i]) for i in range(self.N)]
         self.inst_blocks = nn.ModuleList(layers)
 
     def forward(self, phi, X, Y):
         for idx in range(self.N):
-            phi, X = self.inst_blocks[i](phi, X, Y, idx)
+            phi, X = self.inst_blocks[idx](phi, X, Y, idx)
         return phi, X
