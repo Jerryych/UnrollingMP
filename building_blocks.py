@@ -13,7 +13,7 @@ class Instance_block(nn.Module):
         self.training = tr
         self.step = nn.Parameter(step, requires_grad=self.training)
         self.phi_step = nn.Parameter(phi_step, requires_grad=self.training)
-        self.thresh = torch.tensor(thresh)
+        self.thresh = torch.as_tensor(thresh)
         self.thresh_func = nn.Hardshrink(self.thresh)
 
     def forward(self, phi, X, Y, idx):

@@ -24,6 +24,7 @@ def main(dir, fname, model, mode):
         mp = MP(N, n, p)
         mp.fit(Y, m, phi, X, mode=mode)
     elif model == 'UMP':
+        torch.autograd.set_detect_anomaly(True)
         # simple version training
         ump = UMP(N, n, p, m, training=True, const=(0.1, 0.001, math.sqrt(2 * (-1 * -0.0001) / 0.01)))
         ump.fit(phi, X, Y)
