@@ -3,6 +3,8 @@ from numpy import linalg as LA
 import math
 import torch
 from torch import nn
+from torch import optim
+import torch.nn.functional as F
 from building_blocks import Instance_block, Constraint_block
 
 
@@ -166,6 +168,7 @@ class UMP(nn.Module):
         self.n = n
         self.p = p
         self.m = m
+        self.training = training
         trs, steps, phi_steps, threshs = self.__create_var(self.N, self.m, training, const)
         layers = [Constraint_block(self.N, self.p, trs[i], steps[i, :], phi_steps[i, :], threshs[i, :]) for i in range(self.m)]
         self.const_blocks = nn.ModuleList(layers)
@@ -186,3 +189,49 @@ class UMP(nn.Module):
         for idx in range(self.m):
             phi, X = self.const_blocks[idx](phi, X, Y)
         return phi, X
+
+    def fit(self, phi, X, Y):
+        #phi_init = np.random.uniform(-1.0, 1.0, size=(self.n, self.p))
+        # To unit column vector
+        #phi_init = phi_init / LA.norm(phi_init, axis=0)
+        phi_init = phi
+        X_init = np.random.uniform(-1.0, 1.0, size=(self.p, self.N))
+        if self.training:
+            opt = optim.SGD(self.parameters(), lr=0.1, momentum=0.9)
+            loss_func = F.mse_loss
+            self.__fit(*(phi, phi_init), *(X, X_init), Y, 50, loss_func, opt)
+        else:
+            self.eval()
+            phi_hat, X_hat = self(torch.tensor(phi_init), torch.tensor(X_init), torch.tensor(Y))
+            phi_hat = phi_hat.numpy()
+            X_hat = X_hat.numpy()
+            Y_diff, x_s, mu = self.objective_func(*(phi, phi_hat), *(X, X_hat), Y)
+            print(f'Y diff: {Y_diff}, X s: {x_s}, mu: {mu}')
+
+    def __fit(self, phi, phi_init, X, X_init, Y, epochs, loss_func, opt):
+        for epoch in range(epochs):
+            self.train()
+            phi_hat, X_hat = self(torch.tensor(phi_init), torch.tensor(X_init), torch.tensor(Y))
+            loss = loss_func(X_hat, torch.tensor(X))
+
+            loss.backward()
+            opt.step()
+            opt.zero_grad()
+
+            self.eval()
+            with torch.no_grad():
+                phi_hat, X_hat = self(torch.tensor(phi_init), torch.tensor(X_init), torch.tensor(Y))
+                v_loss = loss_func(X_hat, X)
+            print(f'{epoch}', v_loss)
+
+    def objective_func(self, phi_real, phi_hat, X, X_hat, Y):
+        '''
+        Measure objective function
+        |y - PHI * x|_2 ^ 2 + rho * (m - |x|_0) + |PHI' * PHI - I|_2 ^ 2
+        '''
+        Y_diff = LA.norm(Y - phi_hat @ X_hat, ord='fro')
+        # To 0/1 matrix
+        match = np.where(X != 0, 1, 0) - np.where(X_hat != 0, 1, 0)
+        x_sparse = sum(LA.norm(match, axis=0, ord=0))
+        mu = LA.norm(phi_hat.T @ phi_hat - np.eye(self.p), ord='fro')
+        return Y_diff, x_sparse, mu
