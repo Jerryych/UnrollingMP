@@ -152,6 +152,7 @@ class MP:
         mu = LA.norm(self.phi.T @ self.phi - np.eye(self.p), ord='fro')
         return Y_diff, x_sparse, mu
 
+
 class UMP(nn.Module):
 
     def __init__(self, N, n, p, m, training=False, const=None):
@@ -164,6 +165,10 @@ class UMP(nn.Module):
         const: tuple of parameter init values (steps for X update, phi_steps, thresholds for prox grad)
         '''
         super(UMP, self).__init__()
+        self.dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        print('UMP using device:', self.dev)
+        if self.dev.type == 'cuda':
+            self.to(self.dev)
         self.N = N
         self.n = n
         self.p = p
@@ -221,7 +226,7 @@ class UMP(nn.Module):
             self.eval()
             with torch.no_grad():
                 phi_hat, X_hat = self(torch.as_tensor(phi_init), torch.as_tensor(X_init), torch.as_tensor(Y))
-                v_loss = loss_func(X_hat, X)
+                v_loss = loss_func(X_hat, torch.as_tensor(X))
             print(f'{epoch}', v_loss)
 
     def objective_func(self, phi_real, phi_hat, X, X_hat, Y):
