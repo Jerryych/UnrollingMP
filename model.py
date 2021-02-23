@@ -214,10 +214,15 @@ class UMP(nn.Module):
             print(f'Y diff: {Y_diff}, X s: {x_s}, mu: {mu}')
 
     def __fit(self, phi, phi_init, X, X_init, Y, epochs, loss_func, opt):
+        phi = torch.tensor(phi)
+        phi_init = torch.tensor(phi_init)
+        X = torch.tensor(X)
+        X_init = torch.tensor(X_init)
+        Y = torch.tensor(Y)
         for epoch in range(epochs):
             self.train()
-            phi_hat, X_hat = self(torch.as_tensor(phi_init), torch.as_tensor(X_init), torch.as_tensor(Y))
-            loss = loss_func(X_hat, torch.as_tensor(X))
+            phi_hat, X_hat = self(phi_init, X_init, Y)
+            loss = loss_func(X_hat, X)
 
             loss.backward()
             opt.step()
@@ -225,8 +230,8 @@ class UMP(nn.Module):
 
             self.eval()
             with torch.no_grad():
-                phi_hat, X_hat = self(torch.as_tensor(phi_init), torch.as_tensor(X_init), torch.as_tensor(Y))
-                v_loss = loss_func(X_hat, torch.as_tensor(X))
+                phi_hat, X_hat = self(phi_init, X_init, Y)
+                v_loss = loss_func(X_hat, X)
             print(f'{epoch}', v_loss)
 
     def objective_func(self, phi_real, phi_hat, X, X_hat, Y):
