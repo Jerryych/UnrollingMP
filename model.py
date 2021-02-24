@@ -231,8 +231,10 @@ class UMP(nn.Module):
             self.eval()
             with torch.no_grad():
                 phi_hat, X_hat = self(phi_init, X_init, Y)
-                v_loss = loss_func(X_hat, X)
-            print(f'{epoch}', v_loss)
+                #v_loss = loss_func(phi_hat @ X_hat, Y)
+                Y_diff, x_s, mu = self.objective_func(*(phi.numpy(), phi_hat.numpy()), *(X.numpy(), X_hat.numpy()), Y.numpy())
+                print(f'{epoch} Y diff: {Y_diff}, X s: {x_s}, mu: {mu}')
+            #print(f'{epoch}', v_loss)
 
     def objective_func(self, phi_real, phi_hat, X, X_hat, Y):
         '''
