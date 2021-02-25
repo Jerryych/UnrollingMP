@@ -24,7 +24,7 @@ class Instance_block(nn.Module):
         # Update X[0] ~ X[i - 1]
         for i in range(idx):
             x_tmp = X_prv[:, i] - (-1) * self.step * torch.transpose(phi, 0, 1) @ (Y[:, i].clone() - phi @ X_prv[:, i])
-            X_out[:, idx] = self.thresh_func(x_tmp)
+            X_out[:, i] = self.thresh_func(x_tmp)
         # Update phi with X[0] ~ X[i]
         #idx += 1
         #phi_out = torch.zeros_like(phi)

@@ -55,7 +55,7 @@ class MP:
             #print(f'Init    Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
             y_d, x_s, mu = self.objective_func(phi_real, X, Y, m)
             print(f'Init    Y diff: {y_d}, X s: {x_s}, mu: {mu}')
-            for i in range(50):
+            for i in range(m):
                 self.fit_all_instances(i)
                 #p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
                 #print(f'{i} Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
