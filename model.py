@@ -214,11 +214,18 @@ class UMP(nn.Module):
             print(f'Y diff: {Y_diff}, X s: {x_s}, mu: {mu}')
 
     def __fit(self, phi, phi_init, X, X_init, Y, epochs, loss_func, opt):
-        phi = torch.tensor(phi)
-        phi_init = torch.tensor(phi_init)
-        X = torch.tensor(X)
-        X_init = torch.tensor(X_init)
-        Y = torch.tensor(Y)
+        if self.dev.type == 'cuda':
+            phi = torch.tensor(phi).cuda()
+            phi_init = torch.tensor(phi_init).cuda()
+            X = torch.tensor(X).cuda()
+            X_init = torch.tensor(X_init).cuda()
+            Y = torch.tensor(Y).cuda()
+        else:
+            phi = torch.tensor(phi)
+            phi_init = torch.tensor(phi_init)
+            X = torch.tensor(X)
+            X_init = torch.tensor(X_init)
+            Y = torch.tensor(Y)
         for epoch in range(epochs):
             self.train()
             phi_hat, X_hat = self(phi_init, X_init, Y)
@@ -232,7 +239,10 @@ class UMP(nn.Module):
             with torch.no_grad():
                 phi_hat, X_hat = self(phi_init, X_init, Y)
                 #v_loss = loss_func(phi_hat @ X_hat, Y)
-                Y_diff, x_s, mu = self.objective_func(*(phi.numpy(), phi_hat.numpy()), *(X.numpy(), X_hat.numpy()), Y.numpy())
+                if self.dev.type == 'cuda':
+                    Y_diff, x_s, mu = self.objective_func(*(phi.cpu().numpy(), phi_hat.cpu().numpy()), *(X.cpu().numpy(), X_hat.cpu().numpy()), Y.cpu().numpy())
+                else:
+                    Y_diff, x_s, mu = self.objective_func(*(phi.numpy(), phi_hat.numpy()), *(X.numpy(), X_hat.numpy()), Y.numpy())
                 print(f'{epoch} Y diff: {Y_diff}, X s: {x_s}, mu: {mu}')
             #print(f'{epoch}', v_loss)
 
