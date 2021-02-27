@@ -48,19 +48,19 @@ class MP:
             self.fit_all_instances(m)
             p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
             print(f'Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
-            y_d, x_s, mu = self.objective_func(phi_real, X, Y, m)
-            print(f'OBJ Y diff: {y_d}, X s: {x_s}, mu: {mu}')
+            y_d, x_mis, mu = self.objective_func(phi_real, X, Y, m)
+            print(f'OBJ Y diff: {y_d}, X mismatch: {x_mis}, mu: {mu}')
         elif mode == '1':
             #p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
             #print(f'Init    Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
-            y_d, x_s, mu = self.objective_func(phi_real, X, Y, m)
-            print(f'Init    Y diff: {y_d}, X s: {x_s}, mu: {mu}')
+            y_d, x_mis, mu = self.objective_func(phi_real, X, Y, m)
+            print(f'Init    Y diff: {y_d}, X mismatch: {x_mis}, mu: {mu}')
             for i in range(m):
                 self.fit_all_instances(i)
                 #p_d, x_d, y_d = self.eval(phi_real, X, Y=Y)
                 #print(f'{i} Phi diff: {p_d}, X diff: {x_d}, Y diff: {y_d}')
-                y_d, x_s, mu = self.objective_func(phi_real, X, Y, m)
-                print(f'{i} Y diff: {y_d}, X s: {x_s}, mu: {mu}')
+                y_d, x_mis, mu = self.objective_func(phi_real, X, Y, m)
+                print(f'{i} Y diff: {y_d}, X mismatch: {x_mis}, mu: {mu}')
                 #self.y = self.y - self.phi @ self.x_p
 
     def fit_all_instances(self, m):
@@ -147,10 +147,10 @@ class MP:
         '''
         Y_diff = LA.norm(Y - self.phi @ self.x_p, ord='fro')
         # To 0/1 matrix
-        match = np.where(X != 0, 1, 0) - np.where(self.x_p != 0, 1, 0)
-        x_sparse = sum(LA.norm(match, axis=0, ord=0))
+        mismatch = np.where(X != 0, 1, 0) - np.where(self.x_p != 0, 1, 0)
+        x_mis = sum(LA.norm(mismatch, axis=0, ord=0))
         mu = LA.norm(self.phi.T @ self.phi - np.eye(self.p), ord='fro')
-        return Y_diff, x_sparse, mu
+        return Y_diff, x_mis, mu
 
 
 class UMP(nn.Module):
@@ -210,8 +210,8 @@ class UMP(nn.Module):
             phi_hat, X_hat = self(torch.as_tensor(phi_init), torch.as_tensor(X_init), torch.as_tensor(Y))
             phi_hat = phi_hat.numpy()
             X_hat = X_hat.numpy()
-            Y_diff, x_s, mu = self.objective_func(*(phi, phi_hat), *(X, X_hat), Y)
-            print(f'Y diff: {Y_diff}, X s: {x_s}, mu: {mu}')
+            Y_diff, x_mis, mu = self.objective_func(*(phi, phi_hat), *(X, X_hat), Y)
+            print(f'Y diff: {Y_diff}, X mismatch: {x_mis}, mu: {mu}')
 
     def __fit(self, phi, phi_init, X, X_init, Y, epochs, loss_func, opt):
         if self.dev.type == 'cuda':
@@ -240,10 +240,10 @@ class UMP(nn.Module):
                 phi_hat, X_hat = self(phi_init, X_init, Y)
                 #v_loss = loss_func(phi_hat @ X_hat, Y)
                 if self.dev.type == 'cuda':
-                    Y_diff, x_s, mu = self.objective_func(*(phi.cpu().numpy(), phi_hat.cpu().numpy()), *(X.cpu().numpy(), X_hat.cpu().numpy()), Y.cpu().numpy())
+                    Y_diff, x_mis, mu = self.objective_func(*(phi.cpu().numpy(), phi_hat.cpu().numpy()), *(X.cpu().numpy(), X_hat.cpu().numpy()), Y.cpu().numpy())
                 else:
-                    Y_diff, x_s, mu = self.objective_func(*(phi.numpy(), phi_hat.numpy()), *(X.numpy(), X_hat.numpy()), Y.numpy())
-                print(f'{epoch} Y diff: {Y_diff}, X s: {x_s}, mu: {mu}')
+                    Y_diff, x_mis, mu = self.objective_func(*(phi.numpy(), phi_hat.numpy()), *(X.numpy(), X_hat.numpy()), Y.numpy())
+                print(f'{epoch} Y diff: {Y_diff}, X mismatch: {x_mis}, mu: {mu}')
             #print(f'{epoch}', v_loss)
 
     def objective_func(self, phi_real, phi_hat, X, X_hat, Y):
@@ -253,7 +253,7 @@ class UMP(nn.Module):
         '''
         Y_diff = LA.norm(Y - phi_hat @ X_hat, ord='fro')
         # To 0/1 matrix
-        match = np.where(X != 0, 1, 0) - np.where(X_hat != 0, 1, 0)
-        x_sparse = sum(LA.norm(match, axis=0, ord=0))
+        mismatch = np.where(X != 0, 1, 0) - np.where(X_hat != 0, 1, 0)
+        x_mis = sum(LA.norm(mismatch, axis=0, ord=0))
         mu = LA.norm(phi_hat.T @ phi_hat - np.eye(self.p), ord='fro')
-        return Y_diff, x_sparse, mu
+        return Y_diff, x_mis, mu

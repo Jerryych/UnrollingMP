@@ -28,7 +28,7 @@ class Instance_block(nn.Module):
         # Update phi with X[0] ~ X[i]
         #idx += 1
         #phi_out = torch.zeros_like(phi)
-        #phi_out = phi - self.phi_step * 4 * phi @ (torch.transpose(phi, 0, 1) @ phi - torch.eye(self.p)) - 2 * (Y[:, : idx].clone() - phi @ X_out[:, : idx]) @ torch.transpose(X_out[:, : idx], 0, 1)
+        #phi_out = phi - self.phi_step * (4 * phi @ (torch.transpose(phi, 0, 1) @ phi - torch.eye(self.p)) - 2 * (Y[:, : idx].clone() - phi @ X_out[:, : idx]) @ torch.transpose(X_out[:, : idx], 0, 1))
         # To unit column vector
         #phi_out = phi_out / torch.norm(phi_out, dim=0)
         phi_out = phi.clone()
