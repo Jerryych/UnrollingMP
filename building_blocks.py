@@ -17,21 +17,23 @@ class Instance_block(nn.Module):
         self.thresh_func = nn.Hardshrink(self.thresh)
 
     def forward(self, phi, X, X_prv, Y, idx):
-        # Update X[i]
-        X_out = torch.zeros_like(X)
-        x_tmp = X[:, idx].clone() - (-1) * self.step * torch.transpose(phi, 0, 1) @ (Y[:, idx].clone() - phi @ X[:, idx].clone())
-        X_out[:, idx] = self.thresh_func(x_tmp)
-        # Update X[0] ~ X[i - 1]
-        for i in range(idx):
-            x_tmp = X_prv[:, i] - (-1) * self.step * torch.transpose(phi, 0, 1) @ (Y[:, i].clone() - phi @ X_prv[:, i])
-            X_out[:, i] = self.thresh_func(x_tmp)
+        # Combine update X[i] & update X[0] ~ X[i + 1] together in matrix form
+        if idx == 0:
+            # Update vector X[0] only, store X[0] in matrix X_out
+            X_out = torch.zeros_like(X)
+            x_tmp = X[:, idx].clone() - (-2) * self.step * torch.transpose(phi, 0, 1) @ (Y[:, idx].clone() - phi @ X[:, idx].clone())
+            X_out[:, idx] = self.thresh_func(x_tmp)
+        else:
+            # Update X[0] ~ X[i] in matrix form
+            X_out = torch.zeros_like(X)
+            x_tmp = X[:, : idx + 1].clone() - (-2) * self.step * torch.transpose(phi, 0, 1) @ (Y[:, : idx + 1].clone() - phi @ X[:, : idx + 1].clone())
+            X_out[:, : idx + 1] = self.thresh_func(x_tmp)
         # Update phi with X[0] ~ X[i]
-        #idx += 1
-        #phi_out = torch.zeros_like(phi)
-        #phi_out = phi - self.phi_step * (4 * phi @ (torch.transpose(phi, 0, 1) @ phi - torch.eye(self.p)) - 2 * (Y[:, : idx].clone() - phi @ X_out[:, : idx]) @ torch.transpose(X_out[:, : idx], 0, 1))
+        idx += 1
+        phi_out = phi - self.phi_step * (4 * phi @ (torch.transpose(phi, 0, 1) @ phi - torch.eye(self.p)) - 2 * (Y[:, : idx].clone() - phi @ X_out[:, : idx]) @ torch.transpose(X_out[:, : idx], 0, 1))
         # To unit column vector
-        #phi_out = phi_out / torch.norm(phi_out, dim=0)
-        phi_out = phi.clone()
+        phi_out = phi_out / torch.norm(phi_out, dim=0)
+        #phi_out = phi.clone()
 
         return phi_out, X_out
 

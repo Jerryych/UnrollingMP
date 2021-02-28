@@ -196,10 +196,10 @@ class UMP(nn.Module):
         return phi, X
 
     def fit(self, phi, X, Y):
-        #phi_init = np.random.uniform(-1.0, 1.0, size=(self.n, self.p))
+        phi_init = np.random.uniform(-1.0, 1.0, size=(self.n, self.p))
         # To unit column vector
-        #phi_init = phi_init / LA.norm(phi_init, axis=0)
-        phi_init = phi
+        phi_init = phi_init / LA.norm(phi_init, axis=0)
+        #phi_init = phi
         X_init = np.random.uniform(-1.0, 1.0, size=(self.p, self.N))
         if self.training:
             opt = optim.SGD(self.parameters(), lr=0.1, momentum=0.9)
