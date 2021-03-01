@@ -238,13 +238,12 @@ class UMP(nn.Module):
             self.eval()
             with torch.no_grad():
                 phi_hat, X_hat = self(phi_init, X_init, Y)
-                #v_loss = loss_func(phi_hat @ X_hat, Y)
+                v_loss = loss_func(X_hat, X)
                 if self.dev.type == 'cuda':
                     Y_diff, x_mis, mu = self.objective_func(*(phi.cpu().numpy(), phi_hat.cpu().numpy()), *(X.cpu().numpy(), X_hat.cpu().numpy()), Y.cpu().numpy())
                 else:
                     Y_diff, x_mis, mu = self.objective_func(*(phi.numpy(), phi_hat.numpy()), *(X.numpy(), X_hat.numpy()), Y.numpy())
-                print(f'{epoch} Y diff: {Y_diff}, X mismatch: {x_mis}, mu: {mu}')
-            #print(f'{epoch}', v_loss)
+                print(f'{epoch:2}| Y diff: {Y_diff:8.4f}| X mismatch: {x_mis:8.4f}| X mse: {v_loss.numpy():8.4f}| mu: {mu:8.4f}')
 
     def objective_func(self, phi_real, phi_hat, X, X_hat, Y):
         '''
