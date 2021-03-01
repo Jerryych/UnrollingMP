@@ -16,19 +16,16 @@ class Instance_block(nn.Module):
         self.thresh = torch.as_tensor(thresh)
         self.thresh_func = nn.Hardshrink(self.thresh)
 
-    def forward(self, phi, X, X_prv, Y, idx):
-        # Combine update X[i] & update X[0] ~ X[i + 1] together in matrix form
-        if idx == 0:
-            # Update vector X[0] only, store X[0] in matrix X_out
-            X_out = torch.zeros_like(X)
-            x_tmp = X[:, idx].clone() - (-2) * self.step * torch.transpose(phi, 0, 1) @ (Y[:, idx].clone() - phi @ X[:, idx].clone())
-            X_out[:, idx] = self.thresh_func(x_tmp)
-        else:
-            # Update X[0] ~ X[i] in matrix form
-            X_out = torch.zeros_like(X)
-            x_tmp = X[:, : idx + 1].clone() - (-2) * self.step * torch.transpose(phi, 0, 1) @ (Y[:, : idx + 1].clone() - phi @ X[:, : idx + 1].clone())
-            X_out[:, : idx + 1] = self.thresh_func(x_tmp)
-        # Update phi with X[0] ~ X[i]
+    def forward(self, phi, X_old, X_prv, Y, idx):
+        X_out = torch.zeros_like(X_old)
+        # Update X[idx] with X_old[idx] from previous Constraint_block in vector form
+        x_vec = X_old[:, idx].clone() - (-2) * self.step * torch.transpose(phi, 0, 1) @ (Y[:, idx].clone() - phi @ X_old[:, idx].clone())
+        X_out[:, idx] = self.thresh_func(x_vec)
+        # Update X[0] ~ X[idx - 1] with X_prv[0] ~ X_prv[idx - 1] from previous Instance_block in matrix form
+        if idx != 0:
+            x_tmp = X_prv[:, : idx].clone() - (-2) * self.step * torch.transpose(phi, 0, 1) @ (Y[:, : idx].clone() - phi @ X_prv[:, : idx].clone())
+            X_out[:, : idx] = self.thresh_func(x_tmp)
+        # Update phi with X[0] ~ X[idx]
         idx += 1
         phi_out = phi - self.phi_step * (4 * phi @ (torch.transpose(phi, 0, 1) @ phi - torch.eye(self.p)) - 2 * (Y[:, : idx].clone() - phi @ X_out[:, : idx]) @ torch.transpose(X_out[:, : idx], 0, 1))
         # To unit column vector
