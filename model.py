@@ -175,7 +175,7 @@ class UMP(nn.Module):
         self.m = m
         self.training = training
         trs, steps, phi_steps, threshs = self.__create_var(self.N, self.m, training, const)
-        layers = [Constraint_block(self.N, self.p, trs[i], steps[i, :], phi_steps[i, :], threshs[i, :]) for i in range(self.m)]
+        layers = [Constraint_block(self.N, self.p, trs[i], steps[i, :], phi_steps[i, :], threshs[i, :], self.dev) for i in range(self.m)]
         self.const_blocks = nn.ModuleList(layers)
 
     def __create_var(self, N, m, training, const):
@@ -214,18 +214,11 @@ class UMP(nn.Module):
             print(f'Y diff: {Y_diff}, X mismatch: {x_mis}, mu: {mu}')
 
     def __fit(self, phi, phi_init, X, X_init, Y, epochs, loss_func, opt):
-        if self.dev.type == 'cuda':
-            phi = torch.tensor(phi).cuda()
-            phi_init = torch.tensor(phi_init).cuda()
-            X = torch.tensor(X).cuda()
-            X_init = torch.tensor(X_init).cuda()
-            Y = torch.tensor(Y).cuda()
-        else:
-            phi = torch.tensor(phi)
-            phi_init = torch.tensor(phi_init)
-            X = torch.tensor(X)
-            X_init = torch.tensor(X_init)
-            Y = torch.tensor(Y)
+        phi = torch.tensor(phi).to(self.dev)
+        phi_init = torch.tensor(phi_init).to(self.dev)
+        X = torch.tensor(X).to(self.dev)
+        X_init = torch.tensor(X_init).to(self.dev)
+        Y = torch.tensor(Y).to(self.dev)
         for epoch in range(epochs):
             self.train()
             phi_hat, X_hat = self(phi_init, X_init, Y)
@@ -241,6 +234,7 @@ class UMP(nn.Module):
                 v_loss = loss_func(X_hat, X)
                 if self.dev.type == 'cuda':
                     Y_diff, x_mis, mu = self.objective_func(*(phi.cpu().numpy(), phi_hat.cpu().numpy()), *(X.cpu().numpy(), X_hat.cpu().numpy()), Y.cpu().numpy())
+                    v_loss = v_loss.cpu()
                 else:
                     Y_diff, x_mis, mu = self.objective_func(*(phi.numpy(), phi_hat.numpy()), *(X.numpy(), X_hat.numpy()), Y.numpy())
                 print(f'{epoch:2}| Y diff: {Y_diff:8.4f}| X mismatch: {x_mis:8.4f}| X mse: {v_loss.numpy():8.4f}| mu: {mu:8.4f}')
